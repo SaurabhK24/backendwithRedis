@@ -1,2 +1,2 @@
 # backendwithRedis
-Microservices built with FastAPI, React,  Redis Streams, and RedisJSON
+Microservices built with FastAPI,  Redis Streams, and RedisJSON
