@@ -51,10 +51,12 @@ def format(pk: str):
 
 @app.post('/products')
 def create(product: Product):
+    #Add error handling to handle improper product objects passed in.
     return product.save()
 
 @app.get('/products/{pk}')
 def get(pk : str):
+    #Add error handling to handle when non-existsting pk's are passed. If non-existing pk's are passed a 500 error will occur.
     return Product.get(pk)
  
 

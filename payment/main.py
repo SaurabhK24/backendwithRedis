@@ -19,11 +19,13 @@ app.add_middleware(
 
 
 # Ideally should be different db for different service (using same to avoid charges for now)
+
 redisdb = redis.Redis(
   host='redis-17556.c323.us-east-1-2.ec2.cloud.redislabs.com',
   port=17556,
   password='uJ9FSfJeDEWKW4Ljl9uAd2hzyGBgW9yS',
   decode_responses = True)
+
 
 class Order(HashModel):
     product_id : str
@@ -39,11 +41,16 @@ class Order(HashModel):
 
 
 @app.post('/orders')
-async def create(request: Request, background_tasks: BackgroundTasks):  # id, quantity
+async def create(request: Request):  # id, quantity
     body = await request.json()
 
     req = requests.get('http://localhost:8000/products/%s' % body['id'])
+
+    print("This is the req variable value!!! ------> ", req)
+
     product = req.json()
+
+   
 
     order = Order(
         product_id=body['id'],
@@ -55,20 +62,46 @@ async def create(request: Request, background_tasks: BackgroundTasks):  # id, qu
     )
     order.save()
 
-    background_tasks.add_task(order_completed, order)
+    order_completed(order)
 
     return order
 
-
 def order_completed(order: Order):
-    time.sleep(5)
     order.status = 'completed'
     order.save()
-    redis.xadd('order_completed', order.dict(), '*')
 
 
 
+@app.get('/orders')
+def all():
+    return [format(pk) for pk in Order.all_pks()]
 
+
+def format(pk: str):
+    order = Order.get(pk)
+
+    return {
+        "pk" : order.pk,
+        "product_id":  order.product_id,
+        "total" : order.total,
+        "quantity" : order.quantity,
+        "status" : order.status
+    }
+
+'''
+@app.post('/orders')
+def create(order: Order):
+    return order.save()
+
+'''
+
+@app.delete('/orders/{pk}')
+def delete(pk : str):
+    if (Order.delete(pk) == 1):
+        return "Deleted Sucessfully"
+    else : 
+        return 500
+    
 
 
 
